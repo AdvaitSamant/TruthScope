@@ -10,6 +10,9 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed"
 )
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
 
 # --- CACHE THE AI MODEL ---
 @st.cache_resource
@@ -150,8 +153,9 @@ st.markdown("Verify news, articles, and public claims against global fact-checki
 # Safely get API key
 try:
     API_KEY = st.secrets["API_KEY"]
-except (KeyError, FileNotFoundError):
-    API_KEY = "AIzaSyBqkgd7mHpDN6L4c32nMeisGbRlUICxnIA" 
+except KeyError:
+    st.error("API key not found. Please set your API key in Streamlit secrets.")
+    st.stop()
 
 # User Input
 with st.form("fact_check_form"):
@@ -162,11 +166,33 @@ with st.form("fact_check_form"):
     )
     submit_button = st.form_submit_button("Verify Claim", use_container_width=True)
 
+with st.sidebar:
+    st.header("Search History")
+    
+    # 1. Show the Clear History button right below the heading
+    if st.session_state.history:
+        if st.button("Clear History", use_container_width=True):
+            st.session_state.history = []
+            st.rerun() # Instantly refreshes the app
+            
+    st.divider()
+
+    # 2. Display the history list just once
+    if not st.session_state.history:
+        st.write("No previous searches.")
+    else:
+        for past_query in reversed(st.session_state.history):
+            st.caption(f" {past_query}")
+
 # Processing and Results
 if submit_button:
     if not user_input.strip():
         st.warning("Please enter some text before submitting.")
     else:
+        # --- NEW: Save to history if it's not a duplicate ---
+        if user_input not in st.session_state.history:
+            st.session_state.history.append(user_input)
+
         with st.spinner("Querying databases and analyzing semantics..."):
             time.sleep(0.5) 
             results = check_fake_news(user_input, API_KEY)
