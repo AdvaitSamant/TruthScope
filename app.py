@@ -13,6 +13,14 @@ st.set_page_config(
 if 'history' not in st.session_state:
     st.session_state.history = []
 
+if "results" not in st.session_state:
+    st.session_state.results = None
+
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
+
+if "submitted" not in st.session_state:
+    st.session_state.submitted = False
 
 # --- CACHE THE AI MODEL ---
 @st.cache_resource
@@ -156,10 +164,19 @@ def load_translator():
 translator = load_translator()
 
 # Language Selection
-language = st.selectbox(
-    "Select Language",
-    ["English", "Hindi", "Marathi", "French", "German", "Spanish", "Chinese", "Japanese"]
-)
+lang_map = {
+    "English": "en",
+    "Hindi": "hi",
+    "Marathi": "mr",
+    "French": "fr",
+    "German": "de",
+    "Spanish": "es",
+    "Chinese": "zh-cn",
+    "Japanese": "ja"
+}
+
+selected_lang = st.selectbox("Select Language", list(lang_map.keys()))
+language = lang_map[selected_lang]
 
 # Translation Function
 def translate_text(text, lang):
@@ -189,7 +206,8 @@ with st.form("fact_check_form"):
     user_input = st.text_area(
         translate_text("Enter the claim or news excerpt to verify:", language),
         height=120,
-        placeholder=translate_text("Enter the statement here...", language)
+        placeholder=translate_text("Enter the statement here...", language),
+        value=st.session_state.user_input
     )
     submit_button = st.form_submit_button(
         translate_text("Verify Claim", language),
@@ -214,22 +232,31 @@ with st.sidebar:
             st.caption(past_query)
 
 # Processing
+# Handle Submit
 if submit_button:
-    if not user_input.strip():
+    st.session_state.user_input = user_input
+    st.session_state.submitted = True
+
+
+# Processing
+if st.session_state.submitted:
+    if not st.session_state.user_input.strip():
         st.warning(translate_text("Please enter some text before submitting.", language))
     else:
-        if user_input not in st.session_state.history:
-            st.session_state.history.append(user_input)
+        if st.session_state.user_input not in st.session_state.history:
+            st.session_state.history.append(st.session_state.user_input)
 
         # Translate input to English
-        translated_query = translate_text(user_input, "en")
+        translated_query = translate_text(st.session_state.user_input, "en")
 
         with st.spinner(translate_text("Analyzing claim...", language)):
             results = check_fake_news(translated_query, API_KEY)
 
         if isinstance(results, str):
+            st.session_state.results = None
             st.info(translate_text(results, language))
         else:
+            # Calculate similarity
             query_embedding = similarity_model.encode(translated_query, convert_to_tensor=True)
 
             for res in results:
@@ -239,40 +266,52 @@ if submit_button:
 
             results = sorted(results, key=lambda x: x['similarity_score'], reverse=True)
 
-            st.success(translate_text(f"Found {len(results)} verified record(s).", language))
-            st.divider()
+            st.session_state.results = results
 
-            for res in results:
-                rating_color = get_rating_color(res['rating'])
-                sim_color = get_similarity_color(res['similarity_score'] / 100)
+    st.session_state.submitted = False
 
-                # Translate output to selected language
-                claim = translate_text(res['claim'], language)
-                claimant = translate_text(res['made_by'], language)
-                checker = translate_text(res['fact_checker'], language)
-                rating = translate_text(res['rating'], language)
 
-                card_html = f"""
-                <div class="result-card">
-                    <span class="similarity-badge" style="background-color: {sim_color};">
-                        {translate_text("Match Confidence", language)}: {res['similarity_score']}%
-                    </span>
-                    <div class="claim-text">{translate_text("Claim", language)}: {claim}</div>
-                    <div class="meta-data"><b>{translate_text("Claimant", language)}:</b> {claimant}</div>
-                    <div class="meta-data"><b>{translate_text("Verified By", language)}:</b> {checker}</div>
-                </div>
-                """
-                st.markdown(card_html, unsafe_allow_html=True)
+# Display Results
+if st.session_state.results:
+    results = st.session_state.results
 
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown(f"**{translate_text('Final Assessment', language)}:** :{rating_color}[{rating}]")
-                with col2:
-                    if res['source_link'] != '#':
-                        st.link_button(
-                            translate_text("Read Full Report", language),
-                            res['source_link'],
-                            use_container_width=True
-                        )
+    st.success(translate_text(f"Found {len(results)} verified record(s).", language))
+    st.divider()
 
-                st.write("")
+    for res in results:
+        rating_color = get_rating_color(res['rating'])
+        sim_color = get_similarity_color(res['similarity_score'] / 100)
+
+        # Translate output
+        claim = translate_text(res['claim'], language)
+        claimant = translate_text(res['made_by'], language)
+        checker = translate_text(res['fact_checker'], language)
+        rating = translate_text(res['rating'], language)
+
+        card_html = f"""
+        <div class="result-card">
+            <span class="similarity-badge" style="background-color: {sim_color};">
+                {translate_text("Match Confidence", language)}: {res['similarity_score']}%
+            </span>
+            <div class="claim-text">{translate_text("Claim", language)}: {claim}</div>
+            <div class="meta-data"><b>{translate_text("Claimant", language)}:</b> {claimant}</div>
+            <div class="meta-data"><b>{translate_text("Verified By", language)}:</b> {checker}</div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
+
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**{translate_text('Final Assessment', language)}:** :{rating_color}[{rating}]")
+        with col2:
+            if res['source_link'] != '#':
+                st.link_button(
+                    translate_text("Read Full Report", language),
+                    res['source_link'],
+                    use_container_width=True
+                )
+
+        st.write("")
+        
+if st.session_state.results:
+    results = st.session_state.results
