@@ -12,7 +12,6 @@ from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
 from reportlab.lib.enums import TA_CENTER
-import textwrap
 
 # ── PAGE CONFIG ───────────────────────────────────────────────────────────────
 st.set_page_config(

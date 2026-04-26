@@ -1,0 +1,70 @@
+# FactSarkar
+
+## Description
+TruthScope is a comprehensive web application engineered to verify and fact-check information with unparalleled accuracy. It offers an intuitive interface where users can input claims, and the system cross-references them against a vast array of reliable, up-to-date sources including news outlets, academic databases, and official records. Leveraging advanced algorithms, TruthScope provides detailed fact-checking results, including confidence scores, source citations, and potential biases, ensuring users receive transparent and trustworthy insights.
+
+## Features
+- Intuitive and responsive web interface optimized for desktop and mobile devices
+- Robust fact-checking engine that queries multiple trusted sources in real-time
+- Advanced API endpoints for seamless programmatic access and integration
+- User account management with history tracking and personalized dashboards
+- Support for multiple languages and regions to cater to global users
+- Exportable reports in PDF and JSON formats for further analysis
+- Community-driven features allowing users to contribute and vote on fact-checks
+
+## Installation
+
+1. Clone the repository:
+    ```
+    git clone https://github.com/yourusername/TruthScope.git
+    cd TruthScope
+    ```
+
+2. Create a virtual environment (recommended):
+    ```
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
+
+3. Install the required dependencies:
+    ```
+    pip install -r requirements.txt
+    ```
+
+4. Set up environment variables (create a `.env` file):
+    ```
+    FLASK_APP=app.py
+    SECRET_KEY=your_secret_key_here
+    API_KEY=your_api_key_for_external_sources
+    ```
+
+5. Initialize the database (if applicable):
+    ```
+    flask db init
+    flask db migrate
+    flask db upgrade
+    ```
+
+6. Run the application:
+    ```
+    flask run
+    ```
+
+7. Open your browser and navigate to `http://localhost:5000` (or the configured port).
+
+## Requirements
+- Python 3.8 or higher
+- Dependencies listed in `requirements.txt` (e.g., Flask, SQLAlchemy, Requests, BeautifulSoup, etc.)
+- Optional: PostgreSQL or SQLite for data storage
+- Internet connection for real-time fact-checking
+
+## Usage
+- Visit the web app to input claims via the search bar and receive instant fact-check results with detailed breakdowns.
+- Utilize the API endpoints (e.g., `/api/factcheck`) for integrating TruthScope into other applications or scripts.
+- Register an account to save fact-check histories, customize settings, and access premium features.
+
+## Contributing
+We welcome contributions! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Submit issues, feature requests, or pull requests via GitHub.
+
+## License
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
