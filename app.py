@@ -512,6 +512,7 @@ def build_prompt(user_query, results):
         f"A user has submitted the following claim for verification:\n\n"
         f"USER CLAIM: {user_query}\n\n"
         f"FACT-CHECK DATABASE RESULTS:\n{ctx}\n\n"
+        f"Answering the user's query is the first priority and should be ansered first using the evidence. "
         f"Provide a clear contextual analysis. Explain what the evidence suggests, "
         f"reference the most relevant results, discuss the credibility of the sources, "
         f"and state your overall assessment. "
